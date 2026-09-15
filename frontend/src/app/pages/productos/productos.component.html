@@ -1,0 +1,62 @@
+<div class="page">
+  <h1>Productos</h1>
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+
+  <div class="form-card">
+    <h2>{{ editingId ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+    <form (ngSubmit)="guardar()">
+      <div class="form-row">
+        <input type="text" [(ngModel)]="nuevoProducto.nombre" name="nombre" placeholder="Nombre" required>
+        <input type="text" [(ngModel)]="nuevoProducto.categoria" name="categoria" placeholder="Categoria">
+      </div>
+      <div class="form-row">
+        <input type="number" [(ngModel)]="nuevoProducto.precio" name="precio" placeholder="Precio" required min="0" step="0.01">
+        <input type="number" [(ngModel)]="nuevoProducto.stock" name="stock" placeholder="Stock" required min="0">
+      </div>
+      <input type="text" [(ngModel)]="nuevoProducto.descripcion" name="descripcion" placeholder="Descripcion" class="full-width">
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">{{ editingId ? 'Actualizar' : 'Crear' }}</button>
+        @if (editingId) {
+          <button type="button" (click)="limpiarForm()" class="btn-secondary">Cancelar</button>
+        }
+      </div>
+    </form>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Cargando...</div>
+  }
+
+  @if (!loading()) {
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Categoria</th>
+          <th>Precio</th>
+          <th>Stock</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of productos(); track p.id) {
+          <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.categoria }}</td>
+            <td>${{ p.precio }}</td>
+            <td>{{ p.stock }}</td>
+            <td>
+              <button (click)="editar(p)" class="btn-edit">Editar</button>
+              <button (click)="eliminar(p.id!)" class="btn-delete">Eliminar</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

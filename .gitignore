@@ -1,0 +1,38 @@
+# === Java / Maven ===
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!mvnw
+!mvnw.cmd
+*.class
+*.jar
+*.war
+
+# === Node / Angular ===
+node_modules/
+dist/
+.angular/
+*.tsbuildinfo
+
+# === IDE ===
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+*.code-workspace
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Logs ===
+*.log
+logs/
+
+# === Env / Secrets ===
+.env
+.env.local
+*.pem
+*.key

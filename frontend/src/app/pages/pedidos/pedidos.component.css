@@ -1,0 +1,16 @@
+.page h1 { color: #1e3a8a; margin-bottom: 20px; }
+.error { background: #fee; color: #c00; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+.loading { text-align: center; padding: 20px; color: #6b7280; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+th { background: #f9fafb; font-weight: 600; color: #374151; }
+.estado-badge { padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+.estado-badge.PENDIENTE { background: #fef3c7; color: #92400e; }
+.estado-badge.CONFIRMADO { background: #dbeafe; color: #1e40af; }
+.estado-badge.ENVIADO { background: #e0e7ff; color: #3730a3; }
+.estado-badge.ENTREGADO { background: #d1fae5; color: #065f46; }
+.estado-badge.CANCELADO { background: #fee2e2; color: #991b1b; }
+.detalle-item { display: inline-block; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; margin-right: 4px; font-size: 0.8rem; }
+select { padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-right: 4px; }
+.btn-delete { background: #dc2626; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; }
+.empty { text-align: center; color: #6b7280; padding: 40px; }

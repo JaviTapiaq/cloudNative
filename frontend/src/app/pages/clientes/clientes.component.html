@@ -1,0 +1,62 @@
+<div class="page">
+  <h1>Clientes</h1>
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+
+  <div class="form-card">
+    <h2>{{ editingId ? 'Editar Cliente' : 'Nuevo Cliente' }}</h2>
+    <form (ngSubmit)="guardar()">
+      <div class="form-row">
+        <input type="text" [(ngModel)]="nuevoCliente.nombre" name="nombre" placeholder="Nombre" required>
+        <input type="text" [(ngModel)]="nuevoCliente.apellido" name="apellido" placeholder="Apellido" required>
+      </div>
+      <div class="form-row">
+        <input type="email" [(ngModel)]="nuevoCliente.email" name="email" placeholder="Email" required>
+        <input type="text" [(ngModel)]="nuevoCliente.telefono" name="telefono" placeholder="Telefono">
+      </div>
+      <input type="text" [(ngModel)]="nuevoCliente.direccion" name="direccion" placeholder="Direccion" class="full-width">
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">{{ editingId ? 'Actualizar' : 'Crear' }}</button>
+        @if (editingId) {
+          <button type="button" (click)="limpiarForm()" class="btn-secondary">Cancelar</button>
+        }
+      </div>
+    </form>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Cargando...</div>
+  }
+
+  @if (!loading()) {
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Apellido</th>
+          <th>Email</th>
+          <th>Telefono</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of clientes(); track c.id) {
+          <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.nombre }}</td>
+            <td>{{ c.apellido }}</td>
+            <td>{{ c.email }}</td>
+            <td>{{ c.telefono }}</td>
+            <td>
+              <button (click)="editar(c)" class="btn-edit">Editar</button>
+              <button (click)="eliminar(c.id!)" class="btn-delete">Eliminar</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

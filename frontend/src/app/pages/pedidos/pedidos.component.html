@@ -1,0 +1,59 @@
+<div class="page">
+  <h1>Pedidos</h1>
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Cargando...</div>
+  }
+
+  @if (!loading()) {
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Cliente ID</th>
+          <th>Estado</th>
+          <th>Total</th>
+          <th>Fecha</th>
+          <th>Detalles</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of pedidos(); track p.id) {
+          <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.clienteId }}</td>
+            <td>
+              <span class="estado-badge" [class]="p.estado">{{ p.estado }}</span>
+            </td>
+            <td>${{ p.total }}</td>
+            <td>{{ p.fechaCreacion | date:'short' }}</td>
+            <td>
+              @for (d of p.detalles; track d.productoId) {
+                <span class="detalle-item">Prod:{{ d.productoId }} x{{ d.cantidad }}</span>
+              }
+            </td>
+            <td>
+              <select (change)="cambiarEstado(p.id!, $any($event.target).value)" [value]="p.estado">
+                <option value="PENDIENTE">PENDIENTE</option>
+                <option value="CONFIRMADO">CONFIRMADO</option>
+                <option value="ENVIADO">ENVIADO</option>
+                <option value="ENTREGADO">ENTREGADO</option>
+                <option value="CANCELADO">CANCELADO</option>
+              </select>
+              <button (click)="eliminar(p.id!)" class="btn-delete">Eliminar</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (pedidos().length === 0) {
+      <p class="empty">No hay pedidos registrados.</p>
+    }
+  }
+</div>

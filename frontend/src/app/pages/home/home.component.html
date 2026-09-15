@@ -1,0 +1,33 @@
+<div class="home">
+  <h1>Bienvenido a Pedidos360</h1>
+  <p class="subtitle">Sistema de gestion de pedidos</p>
+
+  @if (userName) {
+    <div class="user-info">
+      <h2>Hola, {{ userName }}</h2>
+      @if (roles.length > 0) {
+        <div class="roles">
+          <span>Roles:</span>
+          @for (role of roles; track role) {
+            <span class="badge">{{ role }}</span>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="cards">
+    <div class="card">
+      <h3>Clientes</h3>
+      <p>Gestiona la informacion de tus clientes</p>
+    </div>
+    <div class="card">
+      <h3>Productos</h3>
+      <p>Administra el catalogo de productos</p>
+    </div>
+    <div class="card">
+      <h3>Pedidos</h3>
+      <p>Consulta y gestiona los pedidos</p>
+    </div>
+  </div>
+</div>
