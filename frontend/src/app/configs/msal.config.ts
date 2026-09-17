@@ -2,10 +2,8 @@ import { Configuration } from '@azure/msal-browser';
 
 export const msalConfig: Configuration = {
   auth: {
-    // PLACEHOLDER: Reemplazar con el clientId de la aplicacion registrada en Azure AD
-    clientId: '',
-    // PLACEHOLDER: Reemplazar con el tenant ID de Azure AD
-    authority: 'https://login.microsoftonline.com/',
+    clientId: '2f281162-babf-4536-88c8-942f20273edb',
+    authority: 'https://login.microsoftonline.com/2065748d-ab65-48bd-8110-f6e96d8fd02e',
     redirectUri: 'http://localhost:4200/',
     postLogoutRedirectUri: 'http://localhost:4200/login',
   },
@@ -25,12 +23,10 @@ export const msalConfig: Configuration = {
 export const protectedResources = {
   bffApi: {
     endpoint: 'http://localhost:8080/api',
-    // PLACEHOLDER: Reemplazar con el scope de la API expuesta en Azure AD
-    // Formato: api://<api-client-id>/<scope-name>
-    scopes: [''],
+    scopes: ['api://2f281162-babf-4536-88c8-942f20273edb/AccesoUsuario'],
   },
 };
 
 export const loginRequest = {
-  scopes: ['openid', 'profile'],
+  scopes: ['openid', 'profile', 'api://2f281162-babf-4536-88c8-942f20273edb/AccesoUsuario'],
 };

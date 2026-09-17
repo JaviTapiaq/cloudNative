@@ -1,13 +1,17 @@
 package com.pedidos360.bff.service;
 
+import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.pedidos360.bff.config.IdaasProperties;
 import org.springframework.stereotype.Service;
 
 import java.net.URL;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
@@ -15,9 +19,20 @@ import java.util.List;
 public class JwtValidationService {
 
     private final IdaasProperties properties;
+    private final ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
 
     public JwtValidationService(IdaasProperties properties) {
         this.properties = properties;
+        this.jwtProcessor = new DefaultJWTProcessor<>();
+        try {
+            // Descarga e inicializa el conjunto de llaves públicas (JWKS) de Microsoft
+            JWKSource<SecurityContext> keySource = new RemoteJWKSet<>(new URL(properties.getJwksUri()));
+            JWSVerificationKeySelector<SecurityContext> keySelector =
+                    new JWSVerificationKeySelector<>(JWSAlgorithm.RS256, keySource);
+            this.jwtProcessor.setJWSKeySelector(keySelector);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al configurar JWKS", e);
+        }
     }
 
     public ValidationResult validate(String token) {
@@ -26,9 +41,10 @@ public class JwtValidationService {
         }
 
         try {
-            SignedJWT signedJWT = SignedJWT.parse(token);
-            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+            // 1. Valida la firma usando las llaves JWKS y extrae los claims
+            JWTClaimsSet claims = this.jwtProcessor.process(token, null);
 
+            // 2. Valida la lógica de negocio sobre los claims (issuer, audience, tiempos)
             String validationError = validateClaims(claims);
             if (validationError != null) {
                 return ValidationResult.failure(validationError);
@@ -37,8 +53,8 @@ public class JwtValidationService {
             List<String> roles = extractRoles(claims);
             return ValidationResult.success(claims.getSubject(), roles);
 
-        } catch (ParseException e) {
-            return ValidationResult.failure("Token malformado: " + e.getMessage());
+        } catch (Exception e) {
+            return ValidationResult.failure("Firma o token invalido: " + e.getMessage());
         }
     }
 
@@ -99,20 +115,9 @@ public class JwtValidationService {
             return new ValidationResult(false, null, List.of(), error);
         }
 
-        public boolean isValid() {
-            return valid;
-        }
-
-        public String getSubject() {
-            return subject;
-        }
-
-        public List<String> getRoles() {
-            return roles;
-        }
-
-        public String getError() {
-            return error;
-        }
+        public boolean isValid() { return valid; }
+        public String getSubject() { return subject; }
+        public List<String> getRoles() { return roles; }
+        public String getError() { return error; }
     }
 }

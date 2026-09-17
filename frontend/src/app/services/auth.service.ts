@@ -21,7 +21,19 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return this.msalService.instance.getActiveAccount() !== null;
+    const activeAccount = this.msalService.instance.getActiveAccount();
+    if (activeAccount) {
+      return true;
+    }
+
+    // Respaldo por si se recarga la página y aún no se ha marcado activeAccount
+    const accounts = this.msalService.instance.getAllAccounts();
+    if (accounts.length > 0) {
+      this.msalService.instance.setActiveAccount(accounts[0]);
+      return true;
+    }
+
+    return false;
   }
 
   getUserName(): string | null {
@@ -36,9 +48,5 @@ export class AuthService {
     }
     const roles = (account.idTokenClaims as Record<string, unknown>)['roles'];
     return Array.isArray(roles) ? roles as string[] : [];
-  }
-
-  handleRedirect(): void {
-    this.msalService.handleRedirectObservable().subscribe();
   }
 }
