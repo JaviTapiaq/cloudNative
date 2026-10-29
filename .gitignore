@@ -36,3 +36,6 @@ logs/
 .env.local
 *.pem
 *.key
+
+# === Documentacion personal (no se publica) ===
+CAMBIOS_RABBITMQ.md

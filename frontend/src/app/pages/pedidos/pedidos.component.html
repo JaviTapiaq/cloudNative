@@ -14,7 +14,7 @@
       <thead>
         <tr>
           <th>ID</th>
-          <th>Cliente ID</th>
+          <th>Cliente</th>
           <th>Estado</th>
           <th>Total</th>
           <th>Fecha</th>
@@ -26,15 +26,15 @@
         @for (p of pedidos(); track p.id) {
           <tr>
             <td>{{ p.id }}</td>
-            <td>{{ p.clienteId }}</td>
+            <td>{{ p.clienteEmail ?? p.clienteId }}</td>
             <td>
               <span class="estado-badge" [class]="p.estado">{{ p.estado }}</span>
             </td>
-            <td>${{ p.total }}</td>
+            <td>{{ p.total | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
             <td>{{ p.fechaCreacion | date:'short' }}</td>
             <td>
-              @for (d of p.detalles; track d.productoId) {
-                <span class="detalle-item">Prod:{{ d.productoId }} x{{ d.cantidad }}</span>
+              @for (d of p.detalles; track $index) {
+                <span class="detalle-item">{{ d.nombreProducto ?? 'Prod:' + d.productoId }} x{{ d.cantidad }}</span>
               }
             </td>
             <td>

@@ -1,0 +1,54 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: ms-clientes
+
+  # Base de datos local por defecto (H2). Con el perfil "supabase" se usa
+  # PostgreSQL en la nube (ver application-supabase.yml).
+  datasource:
+    url: jdbc:h2:mem:clientesdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:pedidos360}
+    password: ${RABBITMQ_PASSWORD:pedidos360}
+    connection-timeout: 5s
+    listener:
+      simple:
+        # ACK manual: el consumidor confirma o rechaza cada mensaje explicitamente
+        acknowledge-mode: manual
+        concurrency: 1
+        max-concurrency: 1
+        prefetch: 1
+        default-requeue-rejected: false
+
+# ---------------------------------------------------------------------------
+# Topologia RabbitMQ de ms-clientes, centralizada.
+# Consume pedido.creado para registrar la compra en el historial del cliente.
+# ---------------------------------------------------------------------------
+clientes:
+  mensajeria:
+    eventos-exchange: pedidos360.eventos.exchange
+    dead-letter-exchange: pedidos360.dlx
+    compras:
+      queue: pedidos360.clientes.pedidos.queue
+      routing-key: pedido.creado
+      dlq: pedidos360.clientes.pedidos.dlq
+
+logging:
+  level:
+    com.pedidos360.clientes: DEBUG

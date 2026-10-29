@@ -7,6 +7,9 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 @Entity
 public class Cliente {
 
@@ -27,6 +30,13 @@ public class Cliente {
     private String telefono;
 
     private String direccion;
+
+    // Historial de compras, actualizado de forma asincrona desde el evento pedido.creado
+    private Integer cantidadPedidos = 0;
+
+    private BigDecimal totalComprado = BigDecimal.ZERO;
+
+    private LocalDateTime ultimaCompra;
 
     public Cliente() {
     }
@@ -86,5 +96,29 @@ public class Cliente {
 
     public void setDireccion(String direccion) {
         this.direccion = direccion;
+    }
+
+    public Integer getCantidadPedidos() {
+        return cantidadPedidos;
+    }
+
+    public void setCantidadPedidos(Integer cantidadPedidos) {
+        this.cantidadPedidos = cantidadPedidos;
+    }
+
+    public BigDecimal getTotalComprado() {
+        return totalComprado;
+    }
+
+    public void setTotalComprado(BigDecimal totalComprado) {
+        this.totalComprado = totalComprado;
+    }
+
+    public LocalDateTime getUltimaCompra() {
+        return ultimaCompra;
+    }
+
+    public void setUltimaCompra(LocalDateTime ultimaCompra) {
+        this.ultimaCompra = ultimaCompra;
     }
 }

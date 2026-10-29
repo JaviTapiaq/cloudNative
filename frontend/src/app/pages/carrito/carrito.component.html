@@ -1,0 +1,73 @@
+<div class="page">
+  <h1>Carrito</h1>
+
+  @if (pedidoCreado(); as pedido) {
+    <div class="exito">
+      <h2>✓ Pedido #{{ pedido.id }} confirmado</h2>
+      <p>Total: <strong>{{ pedido.total | currency:'CLP':'symbol-narrow':'1.0-0' }}</strong></p>
+      <p>
+        Tu pedido quedo registrado. En segundo plano, RabbitMQ distribuye el evento
+        <code>pedido.creado</code> para:
+      </p>
+      <ul>
+        <li>📧 enviarte la notificacion de confirmacion,</li>
+        <li>🎫 generar el ticket de seguimiento y la boleta,</li>
+        <li>📦 descontar el stock de los productos,</li>
+        <li>👤 registrar la compra en tu historial de cliente.</li>
+      </ul>
+      <div class="acciones">
+        <a routerLink="/mis-pedidos" class="btn-primary">Ver mis pedidos</a>
+        <a routerLink="/tienda" class="btn-secondary">Seguir comprando</a>
+      </div>
+    </div>
+  } @else if (carrito.items().length === 0) {
+    <div class="vacio">
+      <p>Tu carrito esta vacio.</p>
+      <a routerLink="/tienda" class="btn-primary">Ir a la tienda</a>
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="error">{{ error() }}</div>
+    }
+
+    <table>
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Precio</th>
+          <th>Cantidad</th>
+          <th>Subtotal</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of carrito.items(); track item.productoId) {
+          <tr>
+            <td>{{ item.nombre }}</td>
+            <td>{{ item.precio | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
+            <td>
+              <div class="cantidad">
+                <button (click)="cambiarCantidad(item.productoId, item.cantidad - 1)">−</button>
+                <span>{{ item.cantidad }}</span>
+                <button (click)="cambiarCantidad(item.productoId, item.cantidad + 1)"
+                        [disabled]="item.cantidad >= item.stock">+</button>
+              </div>
+            </td>
+            <td>{{ item.precio * item.cantidad | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
+            <td><button class="btn-delete" (click)="carrito.quitar(item.productoId)">Quitar</button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="resumen">
+      <div>
+        <div class="total">Total: {{ carrito.total() | currency:'CLP':'symbol-narrow':'1.0-0' }}</div>
+        <small>Comprando como <strong>{{ usuario }}</strong> (cuenta de Azure)</small>
+      </div>
+      <button class="btn-primary btn-confirmar" (click)="confirmar()" [disabled]="enviando()">
+        {{ enviando() ? 'Procesando...' : 'Confirmar pedido' }}
+      </button>
+    </div>
+  }
+</div>

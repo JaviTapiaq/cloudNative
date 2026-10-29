@@ -33,4 +33,18 @@ public class BffController {
                                                 @RequestBody(required = false) String body) {
         return proxyService.forward(request, body, "pedidos");
     }
+
+    // ms-mensajeria: bitacora y publicacion de tareas (monitor)
+    @RequestMapping("/mensajeria/**")
+    public ResponseEntity<String> proxyMensajeria(HttpServletRequest request,
+                                                  @RequestBody(required = false) String body) {
+        return proxyService.forward(request, body, "mensajeria");
+    }
+
+    // ms-mensajeria: administracion de colas, exchanges y bindings
+    @RequestMapping("/admin/**")
+    public ResponseEntity<String> proxyAdmin(HttpServletRequest request,
+                                             @RequestBody(required = false) String body) {
+        return proxyService.forward(request, body, "admin");
+    }
 }
