@@ -47,7 +47,7 @@ public class RabbitAdminService {
         this.props = props;
     }
 
-    // ------------------------------------------------------------------ colas
+    //  colas
 
     public ColaResponse crearCola(CrearColaRequest req) {
         String nombre = req.nombre();
