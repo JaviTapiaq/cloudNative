@@ -16,6 +16,11 @@ public class Pedido {
 
     private Long clienteId;
 
+    // Identidad del comprador, tomada del token de Azure (la entrega el BFF)
+    private String clienteEmail;
+
+    private String clienteNombre;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "pedido_id")
     private List<DetallePedido> detalles = new ArrayList<>();
@@ -27,6 +32,22 @@ public class Pedido {
     private LocalDateTime fechaCreacion;
 
     public Pedido() {
+    }
+
+    public String getClienteEmail() {
+        return clienteEmail;
+    }
+
+    public void setClienteEmail(String clienteEmail) {
+        this.clienteEmail = clienteEmail;
+    }
+
+    public String getClienteNombre() {
+        return clienteNombre;
+    }
+
+    public void setClienteNombre(String clienteNombre) {
+        this.clienteNombre = clienteNombre;
     }
 
     public Long getId() {

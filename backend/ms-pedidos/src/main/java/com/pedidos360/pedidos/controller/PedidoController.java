@@ -7,12 +7,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pedidos")
 public class PedidoController {
+
+    static final String HEADER_USUARIO_EMAIL = "X-Usuario-Email";
+    static final String HEADER_USUARIO_NOMBRE = "X-Usuario-Nombre";
 
     private final PedidoService service;
 
@@ -37,8 +42,28 @@ public class PedidoController {
         return ResponseEntity.ok(service.findByClienteId(clienteId));
     }
 
+    /**
+     * Pedidos del usuario autenticado. La identidad la entrega el BFF a partir del JWT.
+     */
+    @GetMapping("/mios")
+    public ResponseEntity<List<Pedido>> getMios(
+            @RequestHeader(value = HEADER_USUARIO_EMAIL, required = false) String email) {
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(service.findByClienteEmail(email));
+    }
+
     @PostMapping
-    public ResponseEntity<Pedido> create(@Valid @RequestBody Pedido pedido) {
+    public ResponseEntity<Pedido> create(@Valid @RequestBody Pedido pedido,
+                                         @RequestHeader(value = HEADER_USUARIO_EMAIL, required = false) String email,
+                                         @RequestHeader(value = HEADER_USUARIO_NOMBRE, required = false) String nombre) {
+        // Si la peticion viene del BFF, la identidad del token prevalece sobre la del cuerpo
+        if (email != null && !email.isBlank()) {
+            pedido.setClienteEmail(email);
+            // El BFF codifica el nombre para admitir tildes en la cabecera HTTP
+            pedido.setClienteNombre(nombre != null ? URLDecoder.decode(nombre, StandardCharsets.UTF_8) : null);
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(pedido));
     }
 

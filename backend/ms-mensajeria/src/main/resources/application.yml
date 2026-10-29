@@ -1,0 +1,74 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: ms-mensajeria
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:pedidos360}
+    password: ${RABBITMQ_PASSWORD:pedidos360}
+    virtual-host: /
+    connection-timeout: 5s
+    # Confirmaciones del broker hacia el productor (publisher confirms + returns)
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        # ACK manual: cada consumidor confirma (basicAck) o rechaza (basicNack/basicReject) explicitamente
+        acknowledge-mode: manual
+        prefetch: 10
+        concurrency: 1
+        max-concurrency: 3
+        default-requeue-rejected: false
+
+# ---------------------------------------------------------------------------
+# Topologia RabbitMQ centralizada (exchanges, colas, routing keys y DLQs).
+# Todas las clases leen los nombres desde aqui via MensajeriaProperties.
+# ---------------------------------------------------------------------------
+mensajeria:
+  rabbit:
+    dead-letter:
+      exchange: pedidos360.dlx
+      # Si es false, los mensajes quedan en las DLQ para inspeccionarlos
+      # (consola de RabbitMQ o GET /api/admin/queues/{nombre}).
+      consumer-auto-startup: false
+
+    # Eventos de dominio publicados por ms-pedidos (topic exchange)
+    eventos:
+      exchange: pedidos360.eventos.exchange
+      queue: pedidos360.pedidos.eventos.queue
+      routing-key: "pedido.#"
+      dlq: pedidos360.pedidos.eventos.dlq
+
+    # Tareas asincronas por caso de uso (direct exchanges)
+    notificaciones:
+      exchange: pedidos360.notificaciones.exchange
+      queue: pedidos360.notificaciones.queue
+      routing-key: notificacion.enviar
+      dlq: pedidos360.notificaciones.dlq
+
+    tickets:
+      exchange: pedidos360.tickets.exchange
+      queue: pedidos360.tickets.queue
+      routing-key: ticket.generar
+      dlq: pedidos360.tickets.dlq
+
+    documentos:
+      exchange: pedidos360.documentos.exchange
+      queue: pedidos360.documentos.queue
+      routing-key: documento.generar
+      dlq: pedidos360.documentos.dlq
+
+    # Colas de otros microservicios que consumen pedido.creado. Las declara cada
+    # servicio; aqui solo se monitorean y se protegen de la API de administracion.
+    colas-externas:
+      - pedidos360.productos.stock.queue
+      - pedidos360.productos.stock.dlq
+      - pedidos360.clientes.pedidos.queue
+      - pedidos360.clientes.pedidos.dlq
+
+logging:
+  level:
+    com.pedidos360.mensajeria: DEBUG

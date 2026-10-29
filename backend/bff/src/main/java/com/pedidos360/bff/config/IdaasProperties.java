@@ -14,6 +14,34 @@ public class IdaasProperties {
     private String audience = "";
     private String jwksUri = "";
     private List<String> validRoles = new ArrayList<>();
+    // Exigir roles en JwtAuthFilter (requiere roles de aplicacion asignados en Azure)
+    private boolean enforceRoles = false;
+    private String adminRole = "Admin";
+    private List<String> adminPaths = new ArrayList<>(List.of("/api/admin/", "/api/mensajeria/"));
+
+    public boolean isEnforceRoles() {
+        return enforceRoles;
+    }
+
+    public void setEnforceRoles(boolean enforceRoles) {
+        this.enforceRoles = enforceRoles;
+    }
+
+    public String getAdminRole() {
+        return adminRole;
+    }
+
+    public void setAdminRole(String adminRole) {
+        this.adminRole = adminRole;
+    }
+
+    public List<String> getAdminPaths() {
+        return adminPaths;
+    }
+
+    public void setAdminPaths(List<String> adminPaths) {
+        this.adminPaths = adminPaths;
+    }
 
     public String getIssuer() {
         return issuer;

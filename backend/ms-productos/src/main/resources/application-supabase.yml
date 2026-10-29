@@ -1,0 +1,22 @@
+# Perfil "supabase": base de datos PostgreSQL en la nube.
+# Se activa con SPRING_PROFILES_ACTIVE=supabase y las credenciales en variables de entorno
+# (archivo backend/.env, que no se sube a GitHub).
+spring:
+  datasource:
+    url: ${SUPABASE_DB_URL}
+    username: ${SUPABASE_DB_USER}
+    password: ${SUPABASE_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # El pooler de Supabase (plan gratuito) limita las conexiones simultaneas
+      maximum-pool-size: 3
+  jpa:
+    properties:
+      hibernate:
+        # Cada microservicio usa su propio schema dentro del mismo proyecto Supabase
+        default_schema: productos
+        hbm2ddl:
+          create_namespaces: true
+  h2:
+    console:
+      enabled: false

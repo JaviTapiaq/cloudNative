@@ -39,6 +39,8 @@
           <th>Apellido</th>
           <th>Email</th>
           <th>Telefono</th>
+          <th>Pedidos</th>
+          <th>Ultima compra</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -50,6 +52,8 @@
             <td>{{ c.apellido }}</td>
             <td>{{ c.email }}</td>
             <td>{{ c.telefono }}</td>
+            <td>{{ c.cantidadPedidos ?? 0 }}</td>
+            <td>{{ c.ultimaCompra ? (c.ultimaCompra | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
             <td>
               <button (click)="editar(c)" class="btn-edit">Editar</button>
               <button (click)="eliminar(c.id!)" class="btn-delete">Eliminar</button>

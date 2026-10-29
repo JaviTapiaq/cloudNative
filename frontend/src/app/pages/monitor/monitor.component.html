@@ -1,0 +1,87 @@
+<div class="page">
+  <div class="header">
+    <h1>Monitor de mensajeria</h1>
+    @if (actualizado()) {
+      <span class="actualizado">● En vivo · actualizado {{ actualizado() | date:'HH:mm:ss' }}</span>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+  @if (aviso()) {
+    <div class="aviso">{{ aviso() }}</div>
+  }
+
+  <section>
+    <h2>Colas de trabajo</h2>
+    <p class="ayuda">Mensajes pendientes de procesar y consumidores conectados a cada cola.</p>
+    <div class="colas">
+      @for (c of colasPrincipales(); track c.nombre) {
+        <div class="cola">
+          <div class="cola-nombre">{{ nombreCorto(c.nombre) }}</div>
+          <div class="cola-valor">{{ c.mensajes }}</div>
+          <div class="cola-meta" [class.sin-consumidor]="c.consumidores === 0">
+            {{ c.consumidores }} consumidor(es)
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section>
+    <h2>Dead Letter Queues <span class="contador" [class.alerta]="totalEnDlq() > 0">{{ totalEnDlq() }}</span></h2>
+    <p class="ayuda">Mensajes que no pudieron procesarse. Quedan aqui para auditoria sin bloquear el resto del sistema.</p>
+    <div class="colas">
+      @for (c of dlqs(); track c.nombre) {
+        <div class="cola dlq" [class.con-mensajes]="c.mensajes > 0">
+          <div class="cola-nombre">{{ nombreCorto(c.nombre) }}</div>
+          <div class="cola-valor">{{ c.mensajes }}</div>
+          <button class="btn-link" (click)="vaciar(c)" [disabled]="c.mensajes === 0">Vaciar</button>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section>
+    <h2>Simular errores</h2>
+    <p class="ayuda">Publica notificaciones de prueba para ver el manejo de errores del consumidor.</p>
+    <div class="acciones">
+      <button class="btn-warning" (click)="simularFallo('TRANSITORIO')">Fallo transitorio (reintento → DLQ)</button>
+      <button class="btn-danger" (click)="simularFallo('PERMANENTE')">Fallo permanente (→ DLQ)</button>
+      <button class="btn-danger" (click)="publicarInvalido()">Mensaje invalido (→ DLQ)</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="header">
+      <h2>Bitacora de procesamiento</h2>
+      <button class="btn-secondary" (click)="limpiarRegistro()">Limpiar</button>
+    </div>
+    <p class="ayuda">Resultado de cada mensaje en ms-mensajeria (ACK, reintento o envio a DLQ).
+      Los consumidores de ms-productos y ms-clientes registran el suyo en sus propios logs.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Hora</th>
+          <th>Cola</th>
+          <th>Resultado</th>
+          <th>Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of registro(); track $index) {
+          <tr>
+            <td>{{ r.fecha | date:'HH:mm:ss' }}</td>
+            <td>{{ nombreCorto(r.cola) }}</td>
+            <td><span class="estado" [class]="r.estado">{{ r.estado }}</span></td>
+            <td>{{ r.detalle }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (registro().length === 0) {
+      <p class="empty">Sin actividad todavia. Haz un pedido en la tienda o simula un error.</p>
+    }
+  </section>
+</div>

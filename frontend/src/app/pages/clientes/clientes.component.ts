@@ -1,10 +1,11 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClienteService, Cliente } from '../../services/cliente.service';
 
 @Component({
   selector: 'app-clientes',
-  imports: [FormsModule],
+  imports: [FormsModule, DatePipe],
   templateUrl: './clientes.component.html',
   styleUrl: './clientes.component.css'
 })
@@ -47,8 +48,15 @@ export class ClientesComponent implements OnInit {
       });
     } else {
       this.clienteService.create(this.nuevoCliente).subscribe({
-        next: () => {
-          this.cargarClientes();
+        next: (res) => {
+        
+          const clienteRegistrado: Cliente = {
+            ...this.nuevoCliente,
+            id: res?.id || Date.now()
+          };
+
+          
+          this.clientes.update(lista => [...lista, clienteRegistrado]);
           this.limpiarForm();
         },
         error: (err) => this.error.set('Error al crear: ' + err.message)

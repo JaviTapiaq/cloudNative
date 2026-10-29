@@ -1,4 +1,5 @@
 import { Configuration } from '@azure/msal-browser';
+import { environment } from '../../environments/environment';
 
 export const msalConfig: Configuration = {
   auth: {
@@ -22,7 +23,9 @@ export const msalConfig: Configuration = {
 
 export const protectedResources = {
   bffApi: {
-    endpoint: 'http://localhost:8080/api',
+    // El interceptor agrega el JWT a toda peticion cuya URL comience con este endpoint (el BFF)
+    endpoint: environment.apiUrl,
+    // endpoint: 'https://n9mfpgvsah.execute-api.us-east-1.amazonaws.com/api', // AWS (ya no se utiliza)
     scopes: ['api://2f281162-babf-4536-88c8-942f20273edb/AccesoUsuario'],
   },
 };

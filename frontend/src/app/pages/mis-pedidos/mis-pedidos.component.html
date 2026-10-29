@@ -1,0 +1,40 @@
+<div class="page">
+  <div class="header">
+    <h1>Mis pedidos</h1>
+    <button class="btn-secondary" (click)="cargar()">Actualizar</button>
+  </div>
+
+  @if (error()) {
+    <div class="error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Cargando...</div>
+  } @else {
+    @for (p of pedidos(); track p.id) {
+      <div class="pedido">
+        <div class="pedido-header">
+          <strong>Pedido #{{ p.id }}</strong>
+          <span class="estado-badge" [class]="p.estado">{{ p.estado }}</span>
+        </div>
+        <div class="fecha">{{ p.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</div>
+        <ul>
+          @for (d of p.detalles; track $index) {
+            <li>
+              {{ d.cantidad }} x {{ d.nombreProducto ?? 'Producto ' + d.productoId }}
+              <span class="precio">{{ d.precioUnitario | currency:'CLP':'symbol-narrow':'1.0-0' }} c/u</span>
+            </li>
+          }
+        </ul>
+        <div class="total">Total: {{ p.total | currency:'CLP':'symbol-narrow':'1.0-0' }}</div>
+      </div>
+    }
+
+    @if (pedidos().length === 0 && !error()) {
+      <div class="empty">
+        <p>Aun no tienes pedidos.</p>
+        <a routerLink="/tienda" class="btn-primary">Ir a la tienda</a>
+      </div>
+    }
+  }
+</div>

@@ -5,12 +5,19 @@
 
   <ul class="navbar-links">
     <li><a routerLink="/home" routerLinkActive="active">Inicio</a></li>
+    <li><a routerLink="/tienda" routerLinkActive="active">Tienda</a></li>
+    <li><a routerLink="/mis-pedidos" routerLinkActive="active">Mis pedidos</a></li>
+    <li class="separador"></li>
     <li><a routerLink="/clientes" routerLinkActive="active">Clientes</a></li>
     <li><a routerLink="/productos" routerLinkActive="active">Productos</a></li>
     <li><a routerLink="/pedidos" routerLinkActive="active">Pedidos</a></li>
+    <li><a routerLink="/monitor" routerLinkActive="active">Monitor</a></li>
   </ul>
 
   <div class="navbar-user">
+    <a routerLink="/carrito" routerLinkActive="active" class="carrito">
+      🛒 <span class="badge">{{ cantidadCarrito() }}</span>
+    </a>
     <span class="user-name">{{ userName }}</span>
     <button (click)="logout()" class="btn-logout">Cerrar Sesion</button>
   </div>

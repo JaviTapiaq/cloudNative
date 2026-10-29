@@ -1,0 +1,121 @@
+# Pedidos360: levanta todo el sistema con un solo comando
+#   cd backend
+#   docker compose up -d --build
+#
+# Frontend: http://localhost:4200 | BFF: http://localhost:8080 | RabbitMQ: http://localhost:15672
+# Las variables (Supabase, roles) se leen desde backend/.env (ver .env.example).
+
+x-rabbitmq-env: &rabbitmq-env
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_USER: pedidos360
+  RABBITMQ_PASSWORD: pedidos360
+
+x-database-env: &database-env
+  # "default" usa H2 en memoria; "supabase" usa PostgreSQL en la nube
+  SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+  SUPABASE_DB_URL: ${SUPABASE_DB_URL:-}
+  SUPABASE_DB_USER: ${SUPABASE_DB_USER:-}
+  SUPABASE_DB_PASSWORD: ${SUPABASE_DB_PASSWORD:-}
+
+x-depends-rabbitmq: &depends-rabbitmq
+  rabbitmq:
+    condition: service_healthy
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: pedidos360-rabbitmq
+    ports:
+      - "5672:5672"     # AMQP (microservicios)
+      - "15672:15672"   # Consola de administracion: http://localhost:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: pedidos360
+      RABBITMQ_DEFAULT_PASS: pedidos360
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ms-clientes:
+    build: ./ms-clientes
+    container_name: pedidos360-ms-clientes
+    ports:
+      - "8081:8081"
+    environment:
+      <<: [*rabbitmq-env, *database-env]
+    depends_on: *depends-rabbitmq
+    mem_limit: 512m
+    restart: unless-stopped
+
+  ms-productos:
+    build: ./ms-productos
+    container_name: pedidos360-ms-productos
+    ports:
+      - "8082:8082"
+    environment:
+      <<: [*rabbitmq-env, *database-env]
+    depends_on: *depends-rabbitmq
+    mem_limit: 512m
+    restart: unless-stopped
+
+  ms-pedidos:
+    build: ./ms-pedidos
+    container_name: pedidos360-ms-pedidos
+    ports:
+      - "8083:8083"
+    environment:
+      <<: [*rabbitmq-env, *database-env]
+      PRODUCTOS_URL: http://ms-productos:8082/api/productos
+    depends_on:
+      <<: *depends-rabbitmq
+      ms-productos:
+        condition: service_started
+    mem_limit: 512m
+    restart: unless-stopped
+
+  ms-mensajeria:
+    build: ./ms-mensajeria
+    container_name: pedidos360-ms-mensajeria
+    ports:
+      - "8084:8084"
+    environment:
+      <<: *rabbitmq-env
+    depends_on: *depends-rabbitmq
+    mem_limit: 512m
+    restart: unless-stopped
+
+  bff:
+    build: ./bff
+    container_name: pedidos360-bff
+    ports:
+      - "8080:8080"
+    environment:
+      CLIENTES_URL: http://ms-clientes:8081/api/clientes
+      PRODUCTOS_URL: http://ms-productos:8082/api/productos
+      PEDIDOS_URL: http://ms-pedidos:8083/api/pedidos
+      MENSAJERIA_URL: http://ms-mensajeria:8084/api/mensajeria
+      ADMIN_URL: http://ms-mensajeria:8084/api/admin
+      BFF_ENFORCE_ROLES: ${BFF_ENFORCE_ROLES:-false}
+    depends_on:
+      - ms-clientes
+      - ms-productos
+      - ms-pedidos
+      - ms-mensajeria
+    mem_limit: 640m
+    restart: unless-stopped
+
+  frontend:
+    build: ../frontend
+    container_name: pedidos360-frontend
+    ports:
+      # Debe ser 4200: es la URL de retorno registrada en Azure para el login
+      - "4200:80"
+    depends_on:
+      - bff
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:

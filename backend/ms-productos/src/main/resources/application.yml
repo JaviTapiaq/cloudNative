@@ -1,0 +1,59 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: ms-productos
+
+  # Base de datos local por defecto (H2). Con el perfil "supabase" se usa
+  # PostgreSQL en la nube (ver application-supabase.yml).
+  datasource:
+    url: jdbc:h2:mem:productosdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:pedidos360}
+    password: ${RABBITMQ_PASSWORD:pedidos360}
+    connection-timeout: 5s
+    listener:
+      simple:
+        # ACK manual: el consumidor confirma o rechaza cada mensaje explicitamente
+        acknowledge-mode: manual
+        # Un mensaje a la vez: los descuentos de stock se aplican en orden
+        concurrency: 1
+        max-concurrency: 1
+        prefetch: 1
+        default-requeue-rejected: false
+
+# ---------------------------------------------------------------------------
+# Topologia RabbitMQ de ms-productos, centralizada.
+# Consume el evento pedido.creado publicado por ms-pedidos para descontar stock.
+# ---------------------------------------------------------------------------
+productos:
+  mensajeria:
+    eventos-exchange: pedidos360.eventos.exchange
+    dead-letter-exchange: pedidos360.dlx
+    stock:
+      queue: pedidos360.productos.stock.queue
+      routing-key: pedido.creado
+      dlq: pedidos360.productos.stock.dlq
+
+  # Carga inicial del catalogo cuando la tabla esta vacia
+  catalogo-inicial:
+    enabled: true
+
+logging:
+  level:
+    com.pedidos360.productos: DEBUG
