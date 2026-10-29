@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 
 /**
- * Logica de negocio del descuento de stock. No conoce RabbitMQ.
+ * Logica de negocio del descuento de stock. No RabbitMQ.
  */
 @Service
 public class StockService {

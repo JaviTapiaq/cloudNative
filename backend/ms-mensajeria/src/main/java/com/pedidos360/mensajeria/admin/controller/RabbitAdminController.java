@@ -42,7 +42,7 @@ public class RabbitAdminController {
         return adminService.topologia();
     }
 
-    // ------------------------------------------------------------------ colas
+    //  colas
 
     @GetMapping("/queues")
     public List<ColaResponse> listarColas() {
@@ -75,7 +75,7 @@ public class RabbitAdminController {
         return Map.of("cola", name, "mensajesEliminados", adminService.purgarCola(name));
     }
 
-    // ------------------------------------------------------------------ exchanges
+    //  exchanges
 
     @PostMapping("/exchanges")
     public ResponseEntity<ExchangeResponse> crearExchange(@Valid @RequestBody CrearExchangeRequest request) {
@@ -91,7 +91,7 @@ public class RabbitAdminController {
         return ResponseEntity.noContent().build();
     }
 
-    // ------------------------------------------------------------------ bindings
+    //  bindings
 
     @PostMapping("/bindings")
     public ResponseEntity<BindingRequest> crearBinding(@Valid @RequestBody BindingRequest request) {

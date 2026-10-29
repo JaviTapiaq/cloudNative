@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 /**
  * Nombres de exchanges, colas, routing keys y DLQs definidos de forma centralizada
- * en application.yml (prefijo "mensajeria.rabbit"). Se validan al arrancar: si falta
+ * en application.yml. Se validan al arrancar: si falta
  * algun nombre, la aplicacion no inicia.
  */
 @Validated
