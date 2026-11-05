@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Producto {
   id?: number;
@@ -16,7 +17,8 @@ export interface Producto {
 })
 export class ProductoService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api/productos';
+  private baseUrl = `${environment.apiUrl}/productos`;
+  // private baseUrl = 'https://n9mfpgvsah.execute-api.us-east-1.amazonaws.com/api/productos'; // AWS (ya no se utiliza)
 
   getAll(): Observable<Producto[]> {
     return this.http.get<Producto[]>(this.baseUrl);

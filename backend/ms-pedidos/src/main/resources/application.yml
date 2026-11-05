@@ -1,0 +1,49 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: ms-pedidos
+
+  # Base de datos local por defecto (H2). Con el perfil "supabase" se usa
+  # PostgreSQL en la nube (ver application-supabase.yml).
+  datasource:
+    url: jdbc:h2:mem:pedidosdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # RabbitMQ: publicacion de eventos de dominio
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:pedidos360}
+    password: ${RABBITMQ_PASSWORD:pedidos360}
+    connection-timeout: 3s
+
+pedidos:
+  # Consulta sincrona de precio y stock vigentes
+  productos:
+    url: ${PRODUCTOS_URL:http://localhost:8082/api/productos}
+
+  # ---------------------------------------------------------------------------
+  # Topologia RabbitMQ de ms-pedidos, centralizada.
+  # Si enabled=false los pedidos funcionan igual, solo no se publican eventos.
+  # ---------------------------------------------------------------------------
+  mensajeria:
+    enabled: true
+    exchange: pedidos360.eventos.exchange
+    routing-key-creado: pedido.creado
+    routing-key-estado: pedido.estado.actualizado
+
+logging:
+  level:
+    com.pedidos360.pedidos: DEBUG

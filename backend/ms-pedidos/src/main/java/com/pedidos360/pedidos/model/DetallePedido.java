@@ -26,7 +26,18 @@ public class DetallePedido {
     @PositiveOrZero
     private BigDecimal precioUnitario;
 
+    // Nombre del producto al momento de la compra (copiado desde ms-productos)
+    private String nombreProducto;
+
     public DetallePedido() {
+    }
+
+    public String getNombreProducto() {
+        return nombreProducto;
+    }
+
+    public void setNombreProducto(String nombreProducto) {
+        this.nombreProducto = nombreProducto;
     }
 
     public DetallePedido(Long productoId, Integer cantidad, BigDecimal precioUnitario) {

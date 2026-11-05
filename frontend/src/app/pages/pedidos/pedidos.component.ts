@@ -1,11 +1,11 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { PedidoService, Pedido } from '../../services/pedido.service';
 
 @Component({
   selector: 'app-pedidos',
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, CurrencyPipe],
   templateUrl: './pedidos.component.html',
   styleUrl: './pedidos.component.css'
 })

@@ -1,16 +1,21 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface DetallePedido {
   productoId: number;
   cantidad: number;
-  precioUnitario: number;
+  // El backend toma el precio y el nombre vigentes desde ms-productos
+  precioUnitario?: number;
+  nombreProducto?: string;
 }
 
 export interface Pedido {
   id?: number;
-  clienteId: number;
+  clienteId?: number;
+  clienteEmail?: string;
+  clienteNombre?: string;
   detalles: DetallePedido[];
   estado?: string;
   total?: number;
@@ -22,7 +27,8 @@ export interface Pedido {
 })
 export class PedidoService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api/pedidos';
+  private baseUrl = `${environment.apiUrl}/pedidos`;
+  // private baseUrl = 'https://n9mfpgvsah.execute-api.us-east-1.amazonaws.com/api/pedidos'; // AWS (ya no se utiliza)
 
   getAll(): Observable<Pedido[]> {
     return this.http.get<Pedido[]>(this.baseUrl);
@@ -34,6 +40,11 @@ export class PedidoService {
 
   getByCliente(clienteId: number): Observable<Pedido[]> {
     return this.http.get<Pedido[]>(`${this.baseUrl}/cliente/${clienteId}`);
+  }
+
+  /** Pedidos del usuario autenticado (el BFF lo identifica a partir del JWT). */
+  getMios(): Observable<Pedido[]> {
+    return this.http.get<Pedido[]>(`${this.baseUrl}/mios`);
   }
 
   create(pedido: Pedido): Observable<Pedido> {

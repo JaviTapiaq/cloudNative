@@ -1,4 +1,6 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideZoneChangeDetection } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeEsCl from '@angular/common/locales/es-CL';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { MSAL_INSTANCE, MSAL_GUARD_CONFIG, MSAL_INTERCEPTOR_CONFIG, MsalService, MsalGuard, MsalInterceptor, MsalBroadcastService } from '@azure/msal-angular';
@@ -6,6 +8,9 @@ import { PublicClientApplication, InteractionType } from '@azure/msal-browser';
 import { msalConfig, protectedResources, loginRequest } from './configs/msal.config';
 import { routes } from './app.routes';
 import { msalInterceptor } from './interceptors/msal.interceptor';
+
+// Formato chileno para precios ($449.990) y fechas
+registerLocaleData(localeEsCl);
 
 function MSALInstanceFactory(): PublicClientApplication {
   return new PublicClientApplication(msalConfig);
@@ -30,6 +35,7 @@ function MSALInterceptorConfigFactory() {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
+    { provide: LOCALE_ID, useValue: 'es-CL' },
     provideRouter(routes),
     provideHttpClient(withInterceptors([msalInterceptor])),
     {

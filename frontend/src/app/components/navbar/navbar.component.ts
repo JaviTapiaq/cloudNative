@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { CarritoService } from '../../services/carrito.service';
 
 @Component({
   selector: 'app-navbar',
@@ -10,6 +11,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class NavbarComponent {
   private authService = inject(AuthService);
+  readonly cantidadCarrito = inject(CarritoService).cantidadTotal;
 
   get userName() {
     return this.authService.getUserName();
