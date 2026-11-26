@@ -41,6 +41,20 @@ public class BffController {
         return proxyService.forward(request, body, "mensajeria");
     }
 
+    // ms-analitica: metricas en tiempo real y auditoria (alimentadas por Kafka)
+    @RequestMapping("/analitica/**")
+    public ResponseEntity<String> proxyAnalitica(HttpServletRequest request,
+                                                 @RequestBody(required = false) String body) {
+        return proxyService.forward(request, body, "analitica");
+    }
+
+    // ms-kafka-admin: administracion de topicos, configuraciones y consumer groups de Kafka
+    @RequestMapping("/kafka-admin/**")
+    public ResponseEntity<String> proxyKafkaAdmin(HttpServletRequest request,
+                                                  @RequestBody(required = false) String body) {
+        return proxyService.forward(request, body, "kafka-admin");
+    }
+
     // ms-mensajeria: administracion de colas, exchanges y bindings
     @RequestMapping("/admin/**")
     public ResponseEntity<String> proxyAdmin(HttpServletRequest request,

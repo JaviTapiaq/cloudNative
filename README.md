@@ -28,6 +28,12 @@ CLOUDNATIVE_Ev1/
 - **Mensajeria**: RabbitMQ 3.13
 - **Contenedores**: Docker + Docker Compose
 
+## Kafka (streaming de eventos)
+
+Ademas de RabbitMQ, el sistema usa Apache Kafka para reporteria y auditoria en tiempo real
+(`ms-analitica`, `ms-kafka-admin`, cluster de 3 Zookeeper + 3 brokers y Kafka-UI en `localhost:8090`).
+Diseño, comandos, endpoints y guion de demostracion: [CAMBIOS_KAFKA.md](CAMBIOS_KAFKA.md).
+
 ## Como ejecutar (Docker, recomendado)
 
 Requiere Docker Desktop en ejecucion.

@@ -17,7 +17,8 @@ public class IdaasProperties {
     // Exigir roles en JwtAuthFilter (requiere roles de aplicacion asignados en Azure)
     private boolean enforceRoles = false;
     private String adminRole = "Admin";
-    private List<String> adminPaths = new ArrayList<>(List.of("/api/admin/", "/api/mensajeria/"));
+    private List<String> adminPaths = new ArrayList<>(List.of("/api/admin/", "/api/mensajeria/",
+            "/api/kafka-admin/", "/api/analitica/auditoria"));
 
     public boolean isEnforceRoles() {
         return enforceRoles;
