@@ -5,8 +5,8 @@ spring:
   application:
     name: ms-mensajeria
   rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
+    # Lista de nodos del cluster (host:puerto separados por coma); se usa el primero disponible
+    addresses: ${RABBITMQ_ADDRESSES:${RABBITMQ_HOST:localhost}:${RABBITMQ_PORT:5672}}
     username: ${RABBITMQ_USER:pedidos360}
     password: ${RABBITMQ_PASSWORD:pedidos360}
     virtual-host: /

@@ -1,0 +1,28 @@
+# Pedidos360 - Kafka-UI: administracion visual de brokers, topicos, particiones, mensajes
+# y consumer groups (offsets y lag).
+#
+#   cd backend
+#   docker compose -f docker-compose.kafka.yml up -d      # primero el cluster
+#   docker compose -f docker-compose.kafka-ui.yml up -d
+#
+# Consola: http://localhost:8090   (el 8080 ya lo usa el BFF)
+
+networks:
+  default:
+    name: pedidos360-net
+
+services:
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: pedidos360-kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: pedidos360
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:29092,kafka2:29092,kafka3:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
+      DYNAMIC_CONFIG_ENABLED: "true"
+      JAVA_OPTS: "-Xms128m -Xmx256m"
+      LOGGING_LEVEL_ROOT: WARN
+    mem_limit: 448m
+    restart: unless-stopped
