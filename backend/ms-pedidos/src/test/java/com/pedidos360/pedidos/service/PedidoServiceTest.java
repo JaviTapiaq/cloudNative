@@ -43,6 +43,20 @@ class PedidoServiceTest {
         ArgumentCaptor<PedidoEvent> evento = ArgumentCaptor.forClass(PedidoEvent.class);
         verify(eventPublisher).publishEvent(evento.capture());
         assertThat(evento.getValue().items()).hasSize(1);
+        // Stock 5 y se compran 2: quedan 3 (viaja en el evento para las alertas de stock bajo)
+        assertThat(evento.getValue().items().get(0).stockRestante()).isEqualTo(3);
+    }
+
+    @Test
+    void elStockRestanteSumaTodasLasLineasDelMismoProducto() {
+        when(productoClient.obtener(1L)).thenReturn(new ProductoInfo(1L, "Mouse", new BigDecimal("10000"), 10));
+        when(repository.save(any(Pedido.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        service.save(pedido(new DetallePedido(1L, 2, BigDecimal.ONE), new DetallePedido(1L, 3, BigDecimal.ONE)));
+
+        ArgumentCaptor<PedidoEvent> evento = ArgumentCaptor.forClass(PedidoEvent.class);
+        verify(eventPublisher).publishEvent(evento.capture());
+        assertThat(evento.getValue().items()).extracting(PedidoEvent.Item::stockRestante).containsOnly(5);
     }
 
     @Test
