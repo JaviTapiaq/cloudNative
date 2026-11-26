@@ -2,13 +2,52 @@
 #   cd backend
 #   docker compose up -d --build
 #
-# Frontend: http://localhost:4200 | BFF: http://localhost:8080 | RabbitMQ: http://localhost:15672
+# Frontend: http://localhost:4200 | BFF: http://localhost:8080
+# RabbitMQ (cluster de 2 nodos): nodo 1 http://localhost:15672 | nodo 2 http://localhost:15673
 # Las variables (Supabase, roles) se leen desde backend/.env (ver .env.example).
+#
+# Kafka vive en archivos aparte (mismo efecto en memoria, pero se levanta solo cuando se necesita):
+#   docker compose -f docker-compose.kafka.yml up -d       # 3 Zookeeper + 3 brokers + topicos
+#   docker compose -f docker-compose.kafka-ui.yml up -d    # Kafka-UI: http://localhost:8090
+# Comparten la red "pedidos360-net". Si Kafka no esta arriba, los pedidos funcionan igual
+# (ms-pedidos solo registra el error) y ms-analitica / ms-kafka-admin reintentan la conexion.
+# Con 8 GB de RAM: ver CAMBIOS_KAFKA.md, seccion "Consumo de memoria".
+
+# Red compartida con docker-compose.kafka.yml y docker-compose.kafka-ui.yml
+networks:
+  default:
+    name: pedidos360-net
+
+x-kafka-env: &kafka-env
+  KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka1:29092,kafka2:29092,kafka3:29092}
 
 x-rabbitmq-env: &rabbitmq-env
-  RABBITMQ_HOST: rabbitmq
+  # Nodos del cluster: cada servicio se conecta al primero que responda
+  RABBITMQ_ADDRESSES: rabbitmq1:5672,rabbitmq2:5672
   RABBITMQ_USER: pedidos360
   RABBITMQ_PASSWORD: pedidos360
+
+x-rabbitmq-node: &rabbitmq-node
+  image: rabbitmq:3.13-management
+  # Los nodos NO dependen uno del otro: tras un reinicio RabbitMQ exige arrancar primero al
+  # ultimo nodo que se apago, y una dependencia fija entre ellos podria bloquear el arranque.
+  # Si uno se rinde esperando al otro, Docker lo reinicia.
+  restart: unless-stopped
+  environment:
+    RABBITMQ_DEFAULT_USER: pedidos360
+    RABBITMQ_DEFAULT_PASS: pedidos360
+    # Misma cookie en todos los nodos: es el secreto con el que se reconocen entre si
+    RABBITMQ_ERLANG_COOKIE: pedidos360-cluster-cookie
+  healthcheck:
+    # Healthy solo cuando los puertos AMQP y de gestion ya aceptan conexiones
+    # (un simple "ping" responde antes de que la aplicacion RabbitMQ este lista)
+    test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+    interval: 15s
+    timeout: 25s
+    retries: 8
+    # Tiempo de gracia amplio: con poca CPU (equipo de 8 GB) RabbitMQ tarda en arrancar
+    start_period: 60s
+  mem_limit: 512m
 
 x-database-env: &database-env
   # "default" usa H2 en memoria; "supabase" usa PostgreSQL en la nube
@@ -18,26 +57,34 @@ x-database-env: &database-env
   SUPABASE_DB_PASSWORD: ${SUPABASE_DB_PASSWORD:-}
 
 x-depends-rabbitmq: &depends-rabbitmq
-  rabbitmq:
+  rabbitmq1:
+    condition: service_healthy
+  rabbitmq2:
     condition: service_healthy
 
 services:
-  rabbitmq:
-    image: rabbitmq:3.13-management
-    container_name: pedidos360-rabbitmq
+  # Cluster RabbitMQ de 2 nodos: se descubren por rabbitmq/cluster.conf
+  rabbitmq1:
+    <<: *rabbitmq-node
+    hostname: rabbitmq1          # el nombre del nodo es rabbit@rabbitmq1
+    container_name: pedidos360-rabbitmq1
     ports:
       - "5672:5672"     # AMQP (microservicios)
       - "15672:15672"   # Consola de administracion: http://localhost:15672
-    environment:
-      RABBITMQ_DEFAULT_USER: pedidos360
-      RABBITMQ_DEFAULT_PASS: pedidos360
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - rabbitmq1-data:/var/lib/rabbitmq
+      - ./rabbitmq/cluster.conf:/etc/rabbitmq/conf.d/20-cluster.conf:ro
+
+  rabbitmq2:
+    <<: *rabbitmq-node
+    hostname: rabbitmq2          # el nombre del nodo es rabbit@rabbitmq2
+    container_name: pedidos360-rabbitmq2
+    ports:
+      - "5673:5672"     # AMQP
+      - "15673:15672"   # Consola de administracion: http://localhost:15673
+    volumes:
+      - rabbitmq2-data:/var/lib/rabbitmq
+      - ./rabbitmq/cluster.conf:/etc/rabbitmq/conf.d/20-cluster.conf:ro
 
   ms-clientes:
     build: ./ms-clientes
@@ -67,8 +114,10 @@ services:
     ports:
       - "8083:8083"
     environment:
-      <<: [*rabbitmq-env, *database-env]
+      <<: [*rabbitmq-env, *database-env, *kafka-env]
       PRODUCTOS_URL: http://ms-productos:8082/api/productos
+      # false = no publica a Kafka (util si no se levanta el cluster)
+      KAFKA_ENABLED: ${KAFKA_ENABLED:-true}
     depends_on:
       <<: *depends-rabbitmq
       ms-productos:
@@ -87,6 +136,32 @@ services:
     mem_limit: 512m
     restart: unless-stopped
 
+  # Reporteria y auditoria: consumidores Kafka (reporteria-group y auditoria-group)
+  ms-analitica:
+    build: ./ms-analitica
+    container_name: pedidos360-ms-analitica
+    ports:
+      - "8085:8085"
+    environment:
+      <<: [*database-env, *kafka-env]
+      # H2 en archivo (volumen): las metricas sobreviven a reinicios, alineadas con los offsets de Kafka
+      ANALITICA_DB_URL: jdbc:h2:file:/data/analiticadb;DB_CLOSE_DELAY=-1
+    volumes:
+      - analitica-data:/data
+    mem_limit: 384m
+    restart: unless-stopped
+
+  # Administrador de Kafka: topicos, configuraciones y consumer groups
+  ms-kafka-admin:
+    build: ./ms-kafka-admin
+    container_name: pedidos360-ms-kafka-admin
+    ports:
+      - "8086:8086"
+    environment:
+      <<: *kafka-env
+    mem_limit: 320m
+    restart: unless-stopped
+
   bff:
     build: ./bff
     container_name: pedidos360-bff
@@ -98,12 +173,16 @@ services:
       PEDIDOS_URL: http://ms-pedidos:8083/api/pedidos
       MENSAJERIA_URL: http://ms-mensajeria:8084/api/mensajeria
       ADMIN_URL: http://ms-mensajeria:8084/api/admin
+      ANALITICA_URL: http://ms-analitica:8085/api/analitica
+      KAFKA_ADMIN_URL: http://ms-kafka-admin:8086/api/kafka-admin
       BFF_ENFORCE_ROLES: ${BFF_ENFORCE_ROLES:-false}
     depends_on:
       - ms-clientes
       - ms-productos
       - ms-pedidos
       - ms-mensajeria
+      - ms-analitica
+      - ms-kafka-admin
     mem_limit: 640m
     restart: unless-stopped
 
@@ -118,4 +197,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  rabbitmq-data:
+  analitica-data:
+  rabbitmq1-data:
+  rabbitmq2-data:

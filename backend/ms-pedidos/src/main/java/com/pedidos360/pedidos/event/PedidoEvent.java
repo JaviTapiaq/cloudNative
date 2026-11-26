@@ -29,12 +29,15 @@ public record PedidoEvent(
         ESTADO_ACTUALIZADO
     }
 
-    public record Item(Long productoId, String nombreProducto, Integer cantidad, BigDecimal precioUnitario) {
+    /** stockRestante: stock que queda del producto tras el pedido (solo informativo; puede ser null). */
+    public record Item(Long productoId, String nombreProducto, Integer cantidad, BigDecimal precioUnitario,
+                       Integer stockRestante) {
     }
 
     public static PedidoEvent creado(Pedido pedido) {
         List<Item> items = pedido.getDetalles().stream()
-                .map(d -> new Item(d.getProductoId(), d.getNombreProducto(), d.getCantidad(), d.getPrecioUnitario()))
+                .map(d -> new Item(d.getProductoId(), d.getNombreProducto(), d.getCantidad(), d.getPrecioUnitario(),
+                        d.getStockRestante()))
                 .toList();
         int unidades = items.stream().mapToInt(Item::cantidad).sum();
         return new PedidoEvent(Tipo.CREADO, pedido.getId(), pedido.getClienteId(), pedido.getClienteEmail(),

@@ -23,11 +23,16 @@ spring:
 
   # RabbitMQ: publicacion de eventos de dominio
   rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
+    # Lista de nodos del cluster (host:puerto separados por coma); se usa el primero disponible
+    addresses: ${RABBITMQ_ADDRESSES:${RABBITMQ_HOST:localhost}:${RABBITMQ_PORT:5672}}
     username: ${RABBITMQ_USER:pedidos360}
     password: ${RABBITMQ_PASSWORD:pedidos360}
     connection-timeout: 3s
+
+  # Kafka: brokers del cluster (en Docker: kafka1:29092,kafka2:29092,kafka3:29092)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9091,localhost:9092,localhost:9093}
+    client-id: ms-pedidos
 
 pedidos:
   # Consulta sincrona de precio y stock vigentes
@@ -43,6 +48,16 @@ pedidos:
     exchange: pedidos360.eventos.exchange
     routing-key-creado: pedido.creado
     routing-key-estado: pedido.estado.actualizado
+
+  # ---------------------------------------------------------------------------
+  # Kafka (streaming de eventos para reporteria y auditoria). Convive con RabbitMQ.
+  # Si enabled=false los pedidos funcionan igual, solo no se publican eventos a Kafka.
+  # ---------------------------------------------------------------------------
+  kafka:
+    enabled: ${KAFKA_ENABLED:true}
+    topic-pedidos: pedidos360.pedidos.eventos
+    topic-auditoria: pedidos360.auditoria.eventos
+    origen: ms-pedidos
 
 logging:
   level:

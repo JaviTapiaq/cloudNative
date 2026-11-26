@@ -1,0 +1,61 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: ms-analitica
+
+  # Base de datos local por defecto (H2). Con el perfil "supabase" se usa
+  # PostgreSQL en la nube (ver application-supabase.yml).
+  datasource:
+    # En Docker se usa un archivo H2 en un volumen (ANALITICA_DB_URL): las metricas sobreviven a un reinicio.
+    # Con base en memoria se perderian, pero Kafka recuerda los offsets y no reenviaria los eventos antiguos.
+    url: ${ANALITICA_DB_URL:jdbc:h2:mem:analiticadb;DB_CLOSE_DELAY=-1}
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # Kafka: brokers del cluster (en Docker: kafka1:29092,kafka2:29092,kafka3:29092)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9091,localhost:9092,localhost:9093}
+    client-id: ms-analitica
+
+analitica:
+  # ---------------------------------------------------------------------------
+  # Kafka: topicos y consumer groups de ms-analitica.
+  #  - reporteria-group: calcula metricas en tiempo real desde el topico de pedidos
+  #  - auditoria-group : persiste la bitacora desde el topico de auditoria
+  #  - dlt-monitor-group: registra en logs lo que termino en los Dead Letter Topics
+  # Al escalar ms-analitica (mas replicas) las particiones se reparten dentro de cada group.
+  # ---------------------------------------------------------------------------
+  kafka:
+    auto-startup: ${KAFKA_LISTENERS_AUTOSTART:true}
+    topic-pedidos: pedidos360.pedidos.eventos
+    topic-auditoria: pedidos360.auditoria.eventos
+    group-reporteria: reporteria-group
+    group-auditoria: auditoria-group
+    group-dlt: dlt-monitor-group
+    group-alertas: alertas-group
+    # Se alerta cuando el stock que queda de un producto tras un pedido es <= a este valor
+    umbral-stock-bajo: ${ALERTAS_UMBRAL_STOCK:5}
+    # Una hebra por particion (los topicos tienen 3 particiones)
+    concurrency: 3
+    # Reintentos antes de enviar el mensaje al DLT (backoff exponencial)
+    max-reintentos: 3
+    backoff-inicial-ms: 1000
+    backoff-multiplicador: 2.0
+    backoff-maximo-ms: 8000
+
+logging:
+  level:
+    com.pedidos360.analitica: DEBUG
+    org.apache.kafka: WARN

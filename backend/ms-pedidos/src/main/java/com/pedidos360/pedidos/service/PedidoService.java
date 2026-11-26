@@ -111,6 +111,9 @@ public class PedidoService {
             ProductoInfo producto = productos.get(detalle.getProductoId());
             detalle.setPrecioUnitario(producto.precio());
             detalle.setNombreProducto(producto.nombre());
+            // Stock que queda tras comprar TODAS las unidades de este producto en el pedido
+            int stock = producto.stock() != null ? producto.stock() : 0;
+            detalle.setStockRestante(stock - cantidades.get(detalle.getProductoId()));
         }
     }
 

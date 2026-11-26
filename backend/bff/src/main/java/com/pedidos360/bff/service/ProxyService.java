@@ -34,6 +34,12 @@ public class ProxyService {
     @Value("${bff.services.admin-url}")
     private String adminUrl;
 
+    @Value("${bff.services.analitica-url}")
+    private String analiticaUrl;
+
+    @Value("${bff.services.kafka-admin-url}")
+    private String kafkaAdminUrl;
+
     private final RestClient restClient;
 
     public ProxyService() {
@@ -92,6 +98,8 @@ public class ProxyService {
             case "pedidos" -> pedidosUrl;
             case "mensajeria" -> mensajeriaUrl;
             case "admin" -> adminUrl;
+            case "analitica" -> analiticaUrl;
+            case "kafka-admin" -> kafkaAdminUrl;
             default -> throw new IllegalArgumentException("Servicio desconocido: " + service);
         };
     }

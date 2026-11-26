@@ -1,9 +1,11 @@
 package com.pedidos360.pedidos.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -29,7 +31,21 @@ public class DetallePedido {
     // Nombre del producto al momento de la compra (copiado desde ms-productos)
     private String nombreProducto;
 
+    // Stock que quedaria del producto tras este pedido, segun ms-productos al cotizar.
+    // No se guarda en la base ni se expone en la API: solo viaja en el evento de Kafka (alertas de stock bajo).
+    @Transient
+    @JsonIgnore
+    private Integer stockRestante;
+
     public DetallePedido() {
+    }
+
+    public Integer getStockRestante() {
+        return stockRestante;
+    }
+
+    public void setStockRestante(Integer stockRestante) {
+        this.stockRestante = stockRestante;
     }
 
     public String getNombreProducto() {
