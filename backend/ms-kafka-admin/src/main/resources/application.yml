@@ -1,0 +1,52 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: ms-kafka-admin
+
+kafka:
+  admin:
+    # Brokers del cluster (en Docker: kafka1:29092,kafka2:29092,kafka3:29092)
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9091,localhost:9092,localhost:9093}
+    request-timeout-ms: 10000
+
+    # -------------------------------------------------------------------------
+    # Topicos que el servicio garantiza al arrancar (infraestructura declarativa y replicable):
+    # crea los que faltan y alinea las configuraciones de los existentes. Equivale al contenedor
+    # kafka-init de docker-compose.kafka.yml.
+    # -------------------------------------------------------------------------
+    bootstrap-enabled: ${KAFKA_ADMIN_BOOTSTRAP:true}
+    bootstrap-topics:
+      # Reporteria (ms-analitica / reporteria-group): historico de 7 dias
+      - nombre: pedidos360.pedidos.eventos
+        particiones: 3
+        factor-replicacion: 3
+        configuraciones:
+          cleanup.policy: delete
+          retention.ms: "604800000"
+          min.insync.replicas: "2"
+      # Auditoria (ms-analitica / auditoria-group): bitacora de 30 dias, sin compactar
+      - nombre: pedidos360.auditoria.eventos
+        particiones: 3
+        factor-replicacion: 3
+        configuraciones:
+          cleanup.policy: delete
+          retention.ms: "2592000000"
+          min.insync.replicas: "2"
+      # Dead Letter Topics: mensajes que fallaron tras los reintentos
+      - nombre: pedidos360.pedidos.eventos.DLT
+        particiones: 1
+        factor-replicacion: 3
+        configuraciones:
+          retention.ms: "2592000000"
+      - nombre: pedidos360.auditoria.eventos.DLT
+        particiones: 1
+        factor-replicacion: 3
+        configuraciones:
+          retention.ms: "2592000000"
+
+logging:
+  level:
+    com.pedidos360.kafkaadmin: DEBUG
+    org.apache.kafka: WARN
